@@ -26,12 +26,15 @@ func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
 	}
+
+	caPrivateKey, err = rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	if parentCa == nil {
 		parentCa = ca
-		parentCaPrivateKey, err = rsa.GenerateKey(rand.Reader, 4096)
-		if err != nil {
-			return nil, nil, err
-		}
+		parentCaPrivateKey = caPrivateKey
 	}
 
 	pemBuffer := new(bytes.Buffer)
