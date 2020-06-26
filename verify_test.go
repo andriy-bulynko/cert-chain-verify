@@ -14,7 +14,7 @@ import (
 )
 
 func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.PrivateKey) (pemBytes []byte, caPrivateKey *rsa.PrivateKey, err error) {
-	ca := &x509.Certificate{
+	tmpl := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
 			Organization: []string{org},
@@ -33,14 +33,14 @@ func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.
 	}
 
 	if parentCa == nil {
-		parentCa = ca
+		parentCa = tmpl
 		parentCaPrivateKey = caPrivateKey
 	}
 
 	pemBuffer := new(bytes.Buffer)
 	if caPrivateKey, err := rsa.GenerateKey(rand.Reader, 4096); err != nil {
 		return nil, nil, err
-	} else if caBytes, err := x509.CreateCertificate(rand.Reader, ca, parentCa, &caPrivateKey.PublicKey, parentCaPrivateKey); err != nil {
+	} else if caBytes, err := x509.CreateCertificate(rand.Reader, tmpl, parentCa, &caPrivateKey.PublicKey, parentCaPrivateKey); err != nil {
 		return nil, nil, err
 	} else if err := pem.Encode(pemBuffer, &pem.Block{
 		Type:  "CERTIFICATE",
@@ -53,7 +53,7 @@ func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.
 }
 
 func generateCert(commonName, org string, ca *x509.Certificate, caPrivateKey *rsa.PrivateKey) (pemBytes []byte, err error) {
-	cert := &x509.Certificate{
+	tmpl := &x509.Certificate{
 		SerialNumber: big.NewInt(1658),
 		Subject: pkix.Name{
 			CommonName:   commonName,
@@ -69,7 +69,7 @@ func generateCert(commonName, org string, ca *x509.Certificate, caPrivateKey *rs
 	pemBuffer := new(bytes.Buffer)
 	if certPrivKey, err := rsa.GenerateKey(rand.Reader, 4096); err != nil {
 		return nil, err
-	} else if certBytes, err := x509.CreateCertificate(rand.Reader, cert, ca, &certPrivKey.PublicKey, caPrivateKey); err != nil {
+	} else if certBytes, err := x509.CreateCertificate(rand.Reader, tmpl, ca, &certPrivKey.PublicKey, caPrivateKey); err != nil {
 		return nil, err
 	} else if err := pem.Encode(pemBuffer, &pem.Block{
 		Type:  "CERTIFICATE",
