@@ -14,8 +14,14 @@ import (
 )
 
 func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.PrivateKey) (pemBytes []byte, caPrivateKey *rsa.PrivateKey, err error) {
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	tmpl := &x509.Certificate{
-		SerialNumber: big.NewInt(2019),
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			Organization: []string{org},
 		},
@@ -53,15 +59,20 @@ func generateCa(org string, parentCa *x509.Certificate, parentCaPrivateKey *rsa.
 }
 
 func generateCert(commonName, org string, ca *x509.Certificate, caPrivateKey *rsa.PrivateKey) (pemBytes []byte, err error) {
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, fmt.Errorf("ailed to generate serial number: %s", err)
+	}
+
 	tmpl := &x509.Certificate{
-		SerialNumber: big.NewInt(1658),
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			CommonName:   commonName,
 			Organization: []string{org},
 		},
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
-		SubjectKeyId: []byte{1, 2, 3, 4, 6},
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 	}
